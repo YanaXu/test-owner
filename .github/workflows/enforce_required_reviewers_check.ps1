@@ -36,6 +36,10 @@ foreach ($updatedEnforcePath in $updatedEnforcePaths) {
         if ($codeOwnerLineArray.Length -le 1) {
             continue
         }
+        if(-not $actualReviewers){
+            # configured with owner but without reviewers
+            throw "error: At least one of the required reviewers '$($codeReivewOwners -join "', '")' must approve the PR"
+        }
         $codeReivewPath = $codeOwnerLineArray[0]
         if ($codeReivewPath.StartsWith('/')) {
             $codeReivewPath = $codeReivewPath.Substring(1)
