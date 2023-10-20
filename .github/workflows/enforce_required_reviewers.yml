@@ -8,48 +8,12 @@ jobs:
   Check:  
     runs-on: ubuntu-latest  
     steps:  
-      - name: Print Env Variables
-        shell: pwsh
-        env:
-            PR_NO: ${{github.event.number}}
-        run: | 
-          dir env: 
-          Write-Host "---------------------------------"
-          Write-Host "PR_NO:" $env:PR_NO
-
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-      - name: Dump job context
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "$JOB_CONTEXT"
-      - name: Dump steps context
-        env:
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-        run: echo "$STEPS_CONTEXT"
-      - name: Dump runner context
-        env:
-          RUNNER_CONTEXT: ${{ toJson(runner) }}
-        run: echo "$RUNNER_CONTEXT"
-      - name: Dump strategy context
-        env:
-          STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-        run: echo "$STRATEGY_CONTEXT"
-      - name: Dump matrix context
-        env:
-          MATRIX_CONTEXT: ${{ toJson(matrix) }}
-        run: echo "$MATRIX_CONTEXT"
-
-      - name: Test if enforce review is necessarry 
+      - name: Check Reviewers 
         shell: pwsh
         env:
             REPOSITORY: ${{github.repository}}
             PR_NO: ${{github.event.number || github.event.pull_request.number}}
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          Write-Host "REPOSITORY:" $env:REPOSITORY
-          Write-Host "PR_NO:" $env:PR_NO
-          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${env:REPOSITORY}/main/.github/workflows/enforce_required_reviewers_check.ps1" -OutFile "./enforce_required_reviewers_check.ps1"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${env:REPOSITORY}/main/.github/workflows/script/enforce_required_reviewers_check.ps1" -OutFile "./enforce_required_reviewers_check.ps1"
           ./enforce_required_reviewers_check.ps1
