@@ -2,13 +2,7 @@ name: Enforce Required Reviewers
   
 on:  
   pull_request:  
-    types:  
-      - opened  
-      - synchronize  
-  pull_request_review:  
-    types:  
-      - submitted  
-      - dismissed
+  pull_request_review:
   
 jobs:  
   enforce_required_reviewers:  
@@ -16,9 +10,12 @@ jobs:
     steps:  
       - name: Print Env Variables
         shell: pwsh
+        env:
+            PR_NO: ${{github.event.number}}
         run: | 
           dir env: 
           Write-Host "---------------------------------"
+          Write-Host "PR_NO" $env:PR_NO
 
       - name: Dump GitHub context
         env:
