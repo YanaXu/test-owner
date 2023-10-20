@@ -46,8 +46,10 @@ jobs:
         shell: pwsh
         env:
             REPOSITORY: ${{github.repository}}
-            PR_NO: ${{github.event.number}}
+            PR_NO: ${{github.event.number || github.event.pull_request.number}}
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: | 
+        run: |
+          Write-Host "REPOSITORY:" $env:REPOSITORY
+          Write-Host "PR_NO:" $env:PR_NO
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${env:REPOSITORY}/main/.github/workflows/enforce_required_reviewers_check.ps1" -OutFile "./enforce_required_reviewers_check.ps1"
           ./enforce_required_reviewers_check.ps1
