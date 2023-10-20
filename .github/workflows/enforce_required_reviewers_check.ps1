@@ -27,6 +27,7 @@ if ($updatedEnforcePaths.Length -eq 0) {
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/$repository/main/.github/CODEOWNERS" -OutFile "./CODEOWNERS"
 $codeOwnerLines = Get-Content ./CODEOWNERS | Where-Object { ($_.trim().Length -gt 1) -and ($_.trim() -notlike "#*") }
 $actualReviewers = (gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/$repository/pulls/$prNo/reviews | ConvertFrom-Json).user.login
+$actualReviewers = $actualReviewers ? $actualReviewers : @() # if no reviewers
 Write-Host "All reviewers for this PR $prNo : "
 $actualReviewers
 
@@ -35,10 +36,6 @@ foreach ($updatedEnforcePath in $updatedEnforcePaths) {
         $codeOwnerLineArray = ($codeOwnerLine.trim() -split "[ ]+")
         if ($codeOwnerLineArray.Length -le 1) {
             continue
-        }
-        if(-not $actualReviewers){
-            # configured with owner but without reviewers
-            throw "error: At least one of the required reviewers '$($codeReivewOwners -join "', '")' must approve the PR"
         }
         $codeReivewPath = $codeOwnerLineArray[0]
         if ($codeReivewPath.StartsWith('/')) {
