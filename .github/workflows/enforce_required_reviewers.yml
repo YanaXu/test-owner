@@ -15,7 +15,7 @@ jobs:
         run: | 
           dir env: 
           Write-Host "---------------------------------"
-          Write-Host "PR_NO" $env:PR_NO
+          Write-Host "PR_NO:" $env:PR_NO
 
       - name: Dump GitHub context
         env:
@@ -41,7 +41,24 @@ jobs:
         env:
           MATRIX_CONTEXT: ${{ toJson(matrix) }}
         run: echo "$MATRIX_CONTEXT"
-        
+
+      - name: Test if enforce review is necessarry 
+        shell: pwsh
+        env:
+            repository: ${{github.repository}}
+            PR_NO: ${{github.event.number}}
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: | 
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${env:repository}/main/.github/CODEOWNERS" -OutFile "./CODEOWNERS"
+            Get-Content ./CODEOWNERS
+            Write-Host "-----------------------------"
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${env:repository}/main/.github/enforce_review_paths.txt" -OutFile "./enforce_review_paths.txt"
+            Get-Content ./enforce_review_paths.txt
+            Write-Host "-----------------------------"
+            $updatedFiles = (gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${env:repository}/pulls/${env:PR_NO}/files | ConvertFrom-Json).filename
+            $updatedFiles
+            Write-Host "-----------------------------"
+          
       - name: Checkout repository  
         uses: actions/checkout@v2  
         with:  
