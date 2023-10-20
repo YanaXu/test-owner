@@ -45,56 +45,9 @@ jobs:
       - name: Test if enforce review is necessarry 
         shell: pwsh
         env:
-            repository: ${{github.repository}}
+            REPOSITORY: ${{github.repository}}
             PR_NO: ${{github.event.number}}
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: | 
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${env:repository}/main/.github/CODEOWNERS" -OutFile "./CODEOWNERS"
-            Get-Content ./CODEOWNERS
-            Write-Host "-----------------------------"
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${env:repository}/main/.github/enforce_review_paths.txt" -OutFile "./enforce_review_paths.txt"
-            Get-Content ./enforce_review_paths.txt
-            Write-Host "-----------------------------"
-            $updatedFiles = (gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /repos/${env:repository}/pulls/${env:PR_NO}/files | ConvertFrom-Json).filename
-            $updatedFiles
-            Write-Host "-----------------------------"
-          
-      - name: Checkout repository  
-        uses: actions/checkout@v2  
-        with:  
-          ref: ${{ github.head_ref }}  
-          fetch-depth: 0  
-  
-      - name: Check for changes in /test1/  
-        id: check_changes  
-        run: |  
-          git fetch origin ${{ github.base_ref }}  
-          git diff --name-only --diff-filter=d FETCH_HEAD..HEAD | grep '^test1/' > /dev/null && echo "::set-output name=compute_changed::true" || echo "::set-output name=compute_changed::false"  
-  
-      - name: Get required reviewers from CODEOWNERS file  
-        id: get_reviewers  
-        run: |  
-          REQUIRED_REVIEWERS=$(grep '/test1/' .github/CODEOWNERS | awk -F' ' '{for (i=3; i<=NF; i++) printf "%s ", substr($i, 2)}')  
-          echo "::set-output name=required_reviewers::$REQUIRED_REVIEWERS"  
-  
-  
-      - name: Enforce required reviewers approval  
-        if: steps.check_changes.outputs.compute_changed == 'true'  
-        env:  
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  
-        run: |  
-          PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')  
-          REQUIRED_REVIEWERS="${{ steps.get_reviewers.outputs.required_reviewers }}"  
-          APPROVED_REVIEWERS=$(gh pr view $PR_NUMBER --json reviews --jq '.reviews[].author.login')  
-          REQUIRED_REVIEWERS_ARRAY=(${REQUIRED_REVIEWERS//,/ })  
-          APPROVAL_FOUND=false  
-          for reviewer in "${REQUIRED_REVIEWERS_ARRAY[@]}"; do  
-            if [[ $APPROVED_REVIEWERS == *"$reviewer"* ]]; then  
-              APPROVAL_FOUND=true  
-              break  
-            fi  
-          done  
-          if [ "$APPROVAL_FOUND" = false ]; then  
-            echo "error: At least one of the required reviewers ($REQUIRED_REVIEWERS) must approve the PR" >&2  
-            exit 1  
-          fi  
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${env:REPOSITORY}/main/.github/workflows/enforce_required_reviewers_check.ps1" -OutFile "./enforce_required_reviewers_check.ps1"
+          ./enforce_required_reviewers_check.ps1
